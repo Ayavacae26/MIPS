@@ -1,0 +1,42 @@
+triangle:
+function CE7_10(n)
+
+ for j = 1:n
+    Rx = (-1 + 2 * rand());
+    Ry = (sqrt(3) * rand());
+  
+    if (Rx < 0 && Ry < sqrt(3) * (Rx+1))
+      x(j) = Rx;
+      y(j) = Ry;
+    endif
+  
+    if (Rx > 0 && Ry < -1 * sqrt(3) * (Rx-1))
+      x(j) = Rx;
+      y(j) = Ry;
+    endif
+  endfor
+  
+  plot(x,y,"b.")
+ axis square
+ endfunction
+
+
+square:
+function CE7_10(n)
+
+ for c = 1:n
+    Rx = (-1 + 2*rand());
+    Ry = (-1+ 2*rand());
+  
+    if (Rx < 0 && abs(Ry) < (Rx+1))
+      x(c) = Rx;
+      y(c) = Ry;
+    endif
+  
+    if (Rx > 0 && abs(Ry) < -1*(Rx-1))
+      x(c) = Rx;
+      y(c) = Ry;
+    endif
+  endfor
+  plot(x,y,"b.")
+endfunction

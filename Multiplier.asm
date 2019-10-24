@@ -1,0 +1,110 @@
+#
+# multipiler.asm
+# Erik Ayavaca-Tirado
+# 10/6/17
+# This program uses function calls to multiply two numbers and then outputing them to the console. 
+
+
+# Data segment.
+
+.data
+  number1:   .word  3      #This is used as the first number we use for multiplication.
+  number2:	 .word	5    #This is used as the second number we use for multiplication.
+  answer:	 .word  0       #This is used to store the answer value.
+  Multiply:	.asciiz  " x "	#This is used to store the string for multiply.
+  Equals:	.asciiz  " = "	#This is used to store the string for equals.
+
+  
+
+
+# Program segment
+
+.text
+
+#+++++      
+# Main Function  
+# This part loads the values  into the argument registers.
+# It will then call the Mulitply Function and when it recieves the anwers
+# it will return it to the console as a setence using strings and syscall.   
+#-----
+main:
+  addi  $sp, $sp, -12 #Adjust stack to make room for 3 items.
+  sw    $ra, 0($sp)	  #Save register $ra for use as return register.
+  sw	$s0, 4($sp)   #Save register $s0 to use in program.
+  sw	$s1, 8($sp)   #Save register $s1 to use in program.
+  
+  lw  	$s0, number1  #Loads the value of number1 into the $s0 register.
+  lw	$s1, number2  #Loads the value of number2 into the $s1 register.
+   
+  addi	$a0, $s0, 0   #Takes the value of $s0 and puts it into the $a0 argument register.
+  addi	$a1, $s1, 0   #Takes the value of $s1 and puts it into the $a1 argument register.
+  
+  jal   multiplier	  #Calls the multiply function.
+  
+  sw    $v0, answer	 #Takes the return value of the Multiply Function,stores it in the answer memory location.
+  
+#+++++
+# This part of main is used to return the values in the memory into the console
+#----- 
+  
+	#Prints out the value of number1 to the console.
+	li $v0, 1
+	addi $a0, $s0, 0
+	syscall
+	
+	#Prints out the string " x " to the console.
+    li $v0, 4
+	la $a0, Multiply
+	syscall
+  
+	#Prints out the value of number2 to the console.
+    li $v0, 1
+	addi $a0, $s1, 0
+	syscall
+  
+	#Prints out the string " = " to the console.
+    li $v0, 4
+	la $a0, Equals
+	syscall
+  
+	#Prints out the value of answer to the console.
+	lw $a0, answer
+	li $v0, 1
+	syscall
+  
+  
+  lw    $ra, 0($sp)  #Restore the return address and pop it.
+  lw	$s0, 4($sp)  #Pop value from stack for $s0 register.
+  lw	$s1, 8($sp)  #Pop value from stack for $s1 register.
+  addi  $sp, $sp, 12 #Pop and delete the room of 3 items.
+  jr    $ra			 #Return to caller.
+
+  
+#+++++   
+# Mulitply Function
+#-----
+multiplier:
+  addi  $sp, $sp, -12 #Adjust stack to make room for 3 items.
+  sw    $ra, 0($sp)   #Save register $ra for use as return register.
+  sw    $s0, 4($sp)   #Save register $s0 to use in program.
+  sw    $s1, 8($sp)   #Save register $s1 to use in program.
+  
+  add   $s0, $zero, $zero 	#Sets value of $s0 to 0 so that it can used as a counter.
+  add	$s1, $zero, $zero	#Sets value of $s1 to 0 so that it can used as a place to store the asnwer.
+
+
+
+BeginLoop:
+	beq $a1, $s0, EndLoop
+	add $s1, $s1, $a0
+	addi $s0, $s0, 1
+	j BeginLoop
+EndLoop:
+  
+  addi  $v0, $s1, 0   #There is a return value so it is put into the $v0 register from $s1 register.
+  
+  lw    $ra, 0($sp)   #Restore the return address and pop it.
+  lw    $s0, 4($sp)   #Pop value from stack for $s0 register.
+  lw    $s1, 8($sp)   #Pop value from stack for $s1 register.
+  addi  $sp, $sp, 12  #Pop and delete the room of 3 items.
+  jr    $ra           #Returns us back tothe caller, in this case Main.    

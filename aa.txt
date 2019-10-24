@@ -1,0 +1,54 @@
+function x = GaussElimScaled(A,b)
+
+n =length(b);
+s=zeros(n,1);
+L=zeros(n,1);
+x=zeros(n,1);
+
+
+ for i = 1:n
+    L(i) = i;
+    smax = 0;
+    for j = 1 : n
+      smax = max(smax, abs(A(i,j)));
+    endfor
+    s(i) = smax;
+  endfor
+  
+  for k = 1 : n-1
+    rmax = 0;              
+    for i = k : n
+      r = abs(A(L(i),k) / s(L(i))); 
+      if (r > rmax)
+        rmax = r;
+        j = i;
+      endif
+    endfor
+    
+    L(j) = L(k);
+    
+    for i = (k + 1) : n
+      xmult = A(L(i),k) / A(L(k),k); 
+      A(L(i),k) = xmult;          
+      for j = (k + 1) : n
+        A(L(i),j) = A(L(i), j) - (xmult) * A(L(k),j); 
+      endfor
+    endfor
+  endfor
+                    
+                                
+  for k = 1: (n - 1)
+    for i = (k + 1) : n
+      b(L(i)) = b(L(i)) - (A(L(i),k) * b(L(k)));
+    endfor
+  endfor
+  x(n) = b(L(n)) / A(L(n),n);
+  for i = (n - 1) : -1 : 1;
+    sum = b(L(i));
+    for j = i + 1 : n
+      sum = sum - (A(L(i),j) * x(j));
+    endfor
+    x(i) = sum / A(L(i),i);
+  endfor
+      
+endfunction

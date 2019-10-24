@@ -1,0 +1,115 @@
+Possible codes to try to mimic:
+
+without stack pointers:
+
+
+
+main:
+    la  $t0, Array      # Copy the base address of your array into $t1
+    add $t0, $t0, 40    # 4 bytes per int * 10 ints = 40 bytes                              
+outterLoop:             # Used to determine when we are done iterating over the Array
+    add $t1, $0, $0     # $t1 holds a flag to determine when the list is sorted
+    la  $a0, Array      # Set $a0 to the base address of the Array
+innerLoop:                  # The inner loop will iterate over the Array checking if a swap is needed
+    lw  $t2, 0($a0)         # sets $t0 to the current element in array
+    lw  $t3, 4($a0)         # sets $t1 to the next element in array
+    slt $t5, $t2, $t3       # $t5 = 1 if $t0 < $t1
+    beq $t5, $0, continue   # if $t5 = 1, then swap them
+    add $t1, $0, 1          # if we need to swap, we need to check the list again
+    sw  $t2, 4($a0)         # store the greater numbers contents in the higher position in array (swap)
+    sw  $t3, 0($a0)         # store the lesser numbers contents in the lower position in array (swap)
+continue:
+    addi $a0, $a0, 4            # advance the array to start at the next location from last time
+    bne  $a0, $t0, innerLoop    # If $a0 != the end of Array, jump back to innerLoop
+    bne  $t1, $0, outterLoop    # $t1 = 1, another pass is needed, jump back to outterLoop
+    
+    
+    
+   
+code 2:
+
+ $a0=given array v, 
+$a1=leftmost index, 
+$a2= rightmost index
+$s3 = index 'last' 
+$s4 = variabl 'i' for iteration
+
+addi $sp, $sp, -24   # make room on stack for 6 registers
+sw $ra, 20($sp)       # save $ra on stack
+sw $s4, 16($sp)       # save $s4 on stack
+sw $s3, 12($sp)       # save $s3 on stack
+sw $s2, 8($sp)       # save $s2 on stack
+sw $s1, 4($sp)       # save $s1 on stack
+sw $s0, 0($sp)       # save $s0 on stack
+
+move $s0, $a0       # copy parameter $a0 into $s0
+move $s1, $a1       # copy parameter $a1 into $s1
+move $s2, $a2       # copy parameter $a2 into $s2
+
+                   # #if (left >= right) return
+slt $t0, $s1, $s2   # set $t0 = 0 if $s1 >= $s2
+beq $t0, $zero, exit1   # go to exit1 if $s1 >= $s2
+
+add $t0, $s1, $s2   # $t0 is temporary value temp = left+right
+srl $t0, $t0, 2       # $t0 = (left+right)/2
+
+move $a2, $t0   # 3rd parameter of swap is (left+right)/2
+jal swap       # swap(v, left, (left+right)/2)
+
+move $s3, $a1       # copy parameter $a1 into $s3, last = left
+move $s4, $zero       # i = 0
+addi $s4, $s1, 1   # i = left+1
+
+loop:
+slt $t0, $s2, $s4   # set $t0 = 1 if $s2 < $s4 that is (right < i)
+bne $t0, $zero, L1     # if (right<i) return to L1
+sll $t1, $s4, 2       # $t1 = i*4
+add $t2, $s0, $t1   # $t2 = v+(i*4) = v[i]
+sll $t1, $s1, 2       # $t1 = left*4
+add $t3, $s0, $t1   # $t3 = v+(left*4) = v[left]
+
+addi $s3, $s3, 1   # last= last+1
+move $a1, $s3       # 2nd parameter of swap is last
+move $a2, $s4       # 3rd parameter of swap is i
+
+slt $t0, $t2, $t3   # set $t0 = 1 if v[i]<v[left]
+bne $t0, $zero, swap   # if v[i]<v[left] go to swap
+addi $s4, $s4, 1   # i = i+1
+j loop
+
+L1:
+move $a1, $s1       # 2nd parameter of swap is left
+move $a2, $s3       # 3rd parameter of swap is last
+jal swap
+
+addi $t0, $s3, -1   # $t0 = last-1
+move $a2, $t0       # 3rd parameter of qsort is last-1
+jal qsort
+
+addi $t0, $s3, 1   # $t0 = last+1
+move $a1, $t0       # 2nd parameter of qsort is last+1
+move $a2, $s2       # 3rd parameter of qsort is right
+jal qsort
+
+j exit1           # jump to exit1
+
+exit1: #return value and restore stacks, return to caller
+lw $s0, 0($sp)       # restore $s0 from stack
+lw $s1, 4($sp)       # restore $s1 from stack
+lw $s2, 8($sp)       # restore $s2 from stack
+lw $s3, 12($sp)       # restore $s3 from stack
+lw $s4, 16($sp)       # restore $s4 from stack
+lw $ra, 20($sp)       # restore $ra from stack
+addi $sp, $sp, 24   # restore stack pointer
+jr $ra           # return to calling routine
+
+swap:
+# $a0=v, $t1=index1, $t2=index2, $t0=temp
+sll $t1, $a1, 2    # reg $t1 = index1*4
+add $t1, $a0, $t1    # reg $t1 = v+(index1*4) = v[index1]
+sll $t2, $a2, 2       # reg $t2 = k*4
+add $t2, $a0, $t2    # reg $t2 = v+(index2*4) = v[index2]
+lw $t0, 0($t1)       # temp = v[index1]
+sw $t2, 0($t1)       # v[index1] = v[index2]
+sw $t0, 0($t2)       # v[index2] = temp
+jr $ra           # return to caller
